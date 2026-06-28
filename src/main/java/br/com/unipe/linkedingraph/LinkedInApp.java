@@ -1,56 +1,68 @@
 package br.com.unipe.linkedingraph;
 
+import br.com.unipe.linkedingraph.algorithm.DFS;
+import br.com.unipe.linkedingraph.algorithm.PathResult;
 import br.com.unipe.linkedingraph.graph.Graph;
 
 public class LinkedInApp {
-
     public static void main(String[] args) {
-
-        Graph graph = new Graph();
+        Graph linkedinGraph = new Graph();
 
         // ====== VÉRTICES ======
-        graph.addVertices(
-                "Ana",
-                "Bruno",
-                "Carlos",
-                "Daniela",
-                "Eduardo",
-                "Fernanda",
-                "Gabriel",
-                "Hugo",
-                "Igor",
-                "Juliana"
+        linkedinGraph.addVertices(
+                "Ana", "Bruno", "Carlos", "Daniela", "Eduardo",
+                "Fernanda", "Gabriel", "Hugo", "Igor", "Juliana"
         );
 
         // ====== CONEXÕES PRINCIPAIS ======
-        graph.addEdge("Ana", "Bruno", 1);
-        graph.addEdge("Ana", "Carlos", 2);
-        graph.addEdge("Ana", "Daniela", 8);
+        linkedinGraph.addEdge("Ana", "Bruno", 1);
+        linkedinGraph.addEdge("Ana", "Carlos", 2);
+        linkedinGraph.addEdge("Ana", "Daniela", 8);
 
-        graph.addEdge("Bruno", "Eduardo", 1);
-        graph.addEdge("Carlos", "Eduardo", 1);
+        linkedinGraph.addEdge("Bruno", "Eduardo", 1);
+        linkedinGraph.addEdge("Carlos", "Eduardo", 1);
 
-        graph.addEdge("Daniela", "Fernanda", 5);
-        graph.addEdge("Eduardo", "Fernanda", 1);
+        linkedinGraph.addEdge("Daniela", "Fernanda", 5);
+        linkedinGraph.addEdge("Eduardo", "Fernanda", 1);
 
         // ====== GRUPO ISOLADO 1 ======
-        graph.addEdge("Gabriel", "Hugo", 1);
+        linkedinGraph.addEdge("Gabriel", "Hugo", 1);
 
         // ====== GRUPO ISOLADO 2 ======
-        graph.addEdge("Igor", "Juliana", 1);
+        linkedinGraph.addEdge("Igor", "Juliana", 1);
 
-        // ====== TESTES ======
+        // ====== ESTADO DO GRAFO ======
+        System.out.println("=== ESTRUTURA DO GRAFO ===");
+        System.out.println(linkedinGraph);
+        linkedinGraph.displayAdjacencyMatrix();
 
-        System.out.println(graph);
+        // ====== TESTES COM DFS ======
+        DFS dfs = new DFS(linkedinGraph);
+        System.out.println("\n=== TESTES DE ALGORITMO: " + dfs.getName() + " ===");
 
-        graph.displayAdjacencyMatrix();
+        // TESTE 1: Caminho possível
+        System.out.println("\n[Teste 1] Buscando conexão: Ana -> Fernanda");
+        PathResult pathAF = dfs.execute("Ana", "Fernanda");
+        if (pathAF.hasPath()) {
+            System.out.println("Caminho percorrido pelo DFS: " + pathAF.path());
+            System.out.println("Grau de separação (saltos): " + pathAF.totalCost());
+        }
 
-        graph.displayIncidenceMatrix();
+        // TESTE 2: Caminho impossível (ilhas diferentes)
+        System.out.println("\n[Teste 2] Buscando conexão em ilha isolada: Ana -> Gabriel");
+        PathResult pathAG = dfs.execute("Ana", "Gabriel");
+        if (!pathAG.hasPath()) {
+            System.out.println("Resultado: Perfil inalcançável (Sem conexão na rede). PathResult.empty() funcionou!");
+        }
 
-        System.out.println("\nCaminho Ana -> Fernanda: " +
-                graph.getPathSize("Ana", "Bruno", "Eduardo", "Fernanda"));
+        // TESTE 3: Travessia completa do componente conectado
+        System.out.println("\n[Teste 3] Mapeando toda a rede alcançável a partir de: Gabriel");
+        PathResult fullGabriel = dfs.execute("Gabriel", null);
+        System.out.println("Perfis alcançáveis por Gabriel: " + fullGabriel.path());
 
-        System.out.println("Caminho Ana -> Fernanda (alternativo): " +
-                graph.getPathSize("Ana", "Daniela", "Fernanda"));
+        // TESTE 4: Teste manual antigo (preservado)
+        System.out.println("\n=== TESTES MANUAIS ANTIGOS ===");
+        System.out.println("Custo do caminho Ana -> Bruno -> Eduardo -> Fernanda: " +
+                linkedinGraph.getPathSize("Ana", "Bruno", "Eduardo", "Fernanda"));
     }
 }
