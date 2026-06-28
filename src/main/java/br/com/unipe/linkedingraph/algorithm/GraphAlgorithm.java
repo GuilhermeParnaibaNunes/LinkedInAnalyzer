@@ -1,4 +1,6 @@
 package br.com.unipe.linkedingraph.algorithm;
 
-public class GraphAlgorithm {
+public interface GraphAlgorithm {
+    String getName();
+    PathResult execute(String sourceProfile, String targetProfile);
 }
