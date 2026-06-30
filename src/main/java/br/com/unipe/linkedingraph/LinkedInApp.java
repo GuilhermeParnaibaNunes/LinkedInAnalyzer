@@ -1,188 +1,113 @@
 package br.com.unipe.linkedingraph;
 
-import br.com.unipe.linkedingraph.algorithm.BFS;
-import br.com.unipe.linkedingraph.algorithm.DFS;
 import br.com.unipe.linkedingraph.algorithm.PathResult;
-import br.com.unipe.linkedingraph.graph.Graph;
+import br.com.unipe.linkedingraph.analyzer.ConnectionSuggestion;
 import br.com.unipe.linkedingraph.analyzer.LinkedInAnalyzer;
+import br.com.unipe.linkedingraph.graph.Graph;
 
 import java.util.List;
 
 public class LinkedInApp {
     public static void main(String[] args) {
+        System.out.println("=====================================================");
+        System.out.println("*** INICIANDO O MOTOR DE ANÁLISE: LINKEDIN ANALYZER ***");
+        System.out.println("=====================================================\n");
+
+        // ---------------------------------------------------------
+        // FASE 1: CONSTRUÇÃO DA REDE
+        // ---------------------------------------------------------
         Graph linkedinGraph = new Graph();
 
-        // ====== VÉRTICES ======
         linkedinGraph.addVertices(
                 "Ana", "Bruno", "Carlos", "Daniela", "Eduardo",
-                "Fernanda", "Gabriel", "Hugo", "Igor", "Juliana", "Kevin"
+                "Fernanda", "Kevin", // Rede Principal estendida
+                "Gabriel", "Hugo",   // Grupo Isolado 1
+                "Igor", "Juliana"    // Grupo Isolado 2
         );
 
-        // ====== CONEXÕES PRINCIPAIS ======
+        // Conexões da Rede Principal
         linkedinGraph.addEdge("Ana", "Bruno", 1);
         linkedinGraph.addEdge("Ana", "Carlos", 2);
         linkedinGraph.addEdge("Ana", "Daniela", 8);
-
         linkedinGraph.addEdge("Bruno", "Eduardo", 1);
         linkedinGraph.addEdge("Carlos", "Eduardo", 1);
-
         linkedinGraph.addEdge("Daniela", "Fernanda", 5);
         linkedinGraph.addEdge("Eduardo", "Fernanda", 1);
+        linkedinGraph.addEdge("Fernanda", "Kevin", 1); // Extensão de 3º grau
 
-        linkedinGraph.addEdge("Fernanda", "Kevin", 4);
-
-        // ====== GRUPO ISOLADO 1 ======
+        // Conexões dos Grupos Isolados
         linkedinGraph.addEdge("Gabriel", "Hugo", 1);
-
-        // ====== GRUPO ISOLADO 2 ======
         linkedinGraph.addEdge("Igor", "Juliana", 1);
 
-        // ====== ESTADO DO GRAFO ======
-        System.out.println("=== ESTRUTURA DO GRAFO ===");
-        System.out.println(linkedinGraph);
-        linkedinGraph.displayAdjacencyMatrix();
+        System.out.println("[FASE 1] Rede construída com sucesso!");
+        System.out.println("Total de perfis cadastrados: " + linkedinGraph.getVertices().size());
 
-        // Teste manual antigo (preservado)
-        System.out.println("\n=== TESTES MANUAIS ANTIGOS ===");
-        System.out.println("Custo do caminho Ana -> Bruno -> Eduardo -> Fernanda: " +
-                linkedinGraph.getPathSize("Ana", "Bruno", "Eduardo", "Fernanda"));
-
-        // ====== TESTES COM DFS ======
-        DFS dfs = new DFS(linkedinGraph);
-        System.out.println("\n=== TESTES DE ALGORITMO: " + dfs.getName() + " ===");
-
-        // TESTE 1: Caminho possível
-        System.out.println("\n[Teste 1] Buscando conexão: Ana -> Fernanda");
-        PathResult pathAF = dfs.execute("Ana", "Fernanda");
-        if (pathAF.hasPath()) {
-            System.out.println("Caminho percorrido pelo DFS: " + pathAF.path());
-            System.out.println("Grau de separação (saltos): " + pathAF.totalCost());
-        }
-
-        // TESTE 2: Caminho impossível (ilhas diferentes)
-        System.out.println("\n[Teste 2] Buscando conexão em ilha isolada: Ana -> Gabriel");
-        PathResult pathAG = dfs.execute("Ana", "Gabriel");
-        if (!pathAG.hasPath()) {
-            System.out.println("Resultado: Perfil inalcançável (Sem conexão na rede). PathResult.empty() funcionou!");
-        }
-
-        // TESTE 3: Travessia completa do componente conectado
-        System.out.println("\n[Teste 3] Mapeando toda a rede alcançável a partir de: Gabriel");
-        PathResult fullGabriel = dfs.execute("Gabriel", null);
-        System.out.println("Perfis alcançáveis por Gabriel: " + fullGabriel.path());
-
-        // ====== COMPARANDO DFS COM BFS ======
-        BFS bfs = new BFS(linkedinGraph);
-        System.out.println("\n=== TESTES DE ALGORITMO: " + bfs.getName() + " ===");
-
-        // Teste de Caminho Ana -> Fernanda
-        PathResult bfsPath = bfs.execute("Ana", "Fernanda");
-        if (bfsPath.hasPath()) {
-            System.out.println("Caminho percorrido pelo BFS: " + bfsPath.path());
-            System.out.println("Grau de separação (saltos): " + bfsPath.totalCost());
-        }
-        // ====== GRAU DE SEPARAÇÃO ======
+        // Inicializa o Cérebro das Análises
         LinkedInAnalyzer analyzer = new LinkedInAnalyzer(linkedinGraph);
-        System.out.println("\n=== TESTES: Grau de Separação (LinkedInAnalyzer) ===");
 
-        // TESTE 1: Contatos diretos (grau 1)
-        System.out.println("\n[Grau de Separação] Ana -> Bruno");
-        int grau1 = analyzer.degreeOfSeparation("Ana", "Bruno");
-        System.out.println("Resultado: " + (grau1 == -1 ? "Sem conexão (-1)" : grau1 + " salto(s)"));
+        // ---------------------------------------------------------
+        // FASE 2: MAPEAMENTO DE SUB-REDES (Busca Exaustiva / DFS)
+        // ---------------------------------------------------------
+        System.out.println("\n-----------------------------------------------------");
+        System.out.println("[FASE 2] MAPEAMENTO DE COMPONENTES CONEXOS (DFS)");
+        System.out.println("Objetivo: Encontrar grupos totalmente isolados na rede");
 
-        // TESTE 2: Amigo de amigo (grau 2)
-        System.out.println("\n[Grau de Separação] Ana -> Eduardo");
-        int grau2 = analyzer.degreeOfSeparation("Ana", "Eduardo");
-        System.out.println("Resultado: " + (grau2 == -1 ? "Sem conexão (-1)" : grau2 + " salto(s)"));
+        List<List<String>> isolatedGroups = analyzer.isolatedGroups();
+        System.out.println("-> Total de bolhas (sub-redes) detectadas: " + isolatedGroups.size());
+        for (int i = 0; i < isolatedGroups.size(); i++) {
+            System.out.println("   Grupo " + (i + 1) + ": " + isolatedGroups.get(i));
+        }
 
-        // TESTE 3: Caminho mais longo na rede principal (grau 3)
-        System.out.println("\n[Grau de Separação] Ana -> Kevin");
-        int grau3 = analyzer.degreeOfSeparation("Ana", "Kevin");
-        System.out.println("Resultado: " + (grau3 == -1 ? "Sem conexão (-1)" : grau3 + " salto(s)"));
+        // ---------------------------------------------------------
+        // FASE 3: GRAU DE SEPARAÇÃO (Busca em Largura / BFS)
+        // ---------------------------------------------------------
+        System.out.println("\n-----------------------------------------------------");
+        System.out.println("[FASE 3] GRAU DE SEPARAÇÃO (BFS)");
+        System.out.println("Objetivo: Encontrar a distância mais curta em número de saltos");
 
-        // TESTE 4: Perfis em componentes totalmente isolados (deve retornar -1)
-        System.out.println("\n[Grau de Separação] Ana -> Gabriel (componentes isolados)");
-        int grau4 = analyzer.degreeOfSeparation("Ana", "Gabriel");
-        System.out.println("Resultado: " + (grau4 == -1 ? "Sem conexão (-1)" : grau4 + " salto(s)"));
+        System.out.println("\n-> Teste: Ana até Kevin (Forçando 3 graus de separação)");
+        int saltos = analyzer.degreeOfSeparation("Ana", "Kevin");
+        System.out.println("   Resultado: " + (saltos == -1 ? "Inalcançável" : saltos + " salto(s) de distância."));
 
-        // TESTE 5: Mesmo perfil (grau 0)
-        System.out.println("\n[Grau de Separação] Ana -> Ana (mesmo perfil)");
-        int grau5 = analyzer.degreeOfSeparation("Ana", "Ana");
-        System.out.println("Resultado: " + (grau5 == -1 ? "Sem conexão (-1)" : grau5 + " salto(s)"));
+        // ---------------------------------------------------------
+        // FASE 4: ROTA DE MAIOR AFINIDADE (Algoritmo de Dijkstra)
+        // ---------------------------------------------------------
+        System.out.println("\n-----------------------------------------------------");
+        System.out.println("[FASE 4] ROTA DE MAIOR AFINIDADE (DIJKSTRA)");
+        System.out.println("Objetivo: O caminho de menor custo acumulado (ignorando nº de saltos)");
 
-        // ====== SUGESTÕES DE CONEXÃO ======
-        br.com.unipe.linkedingraph.analyzer.ConnectionSuggestion suggester =
-                new br.com.unipe.linkedingraph.analyzer.ConnectionSuggestion(linkedinGraph);
+        System.out.println("\n-> Teste: Ana até Fernanda");
+        PathResult afinidade = analyzer.bestAffinityRoute("Ana", "Fernanda");
 
-        System.out.println("\n=== TESTES: Sugestões de Conexão (ConnectionSuggestion) ===");
+        if (afinidade.hasPath()) {
+            System.out.println("   Caminho mais curto em passos seria via Daniela (Custo 13).");
+            System.out.println("   Mas o Dijkstra escolheu: " + afinidade.path());
+            System.out.println("   Custo otimizado encontrado: " + afinidade.totalCost());
+        } else {
+            System.out.println("   Resultado: Sem rota possível.");
+        }
 
-        // TESTE 1: Sugestões para Ana (Múltiplas sugestões com pesos diferentes)
-        System.out.println("\n[Sugestões] Perfil: Ana");
+        // ---------------------------------------------------------
+        // FASE 5: SUGESTÕES DE CONEXÃO (Amigos em Comum)
+        // ---------------------------------------------------------
+        System.out.println("\n-----------------------------------------------------");
+        System.out.println("[FASE 5] MOTOR DE SUGESTÕES DE CONEXÃO");
+        System.out.println("Objetivo: Recomendar amigos de 2º grau ordenados por relevância");
+
+        ConnectionSuggestion suggester = new ConnectionSuggestion(linkedinGraph);
+
+        System.out.println("\n-> Sugestões para Ana:");
         var sugestoesAna = suggester.suggestConnections("Ana");
-        if (sugestoesAna.isEmpty()) {
-            System.out.println("Nenhuma sugestão encontrada.");
-        } else {
-            sugestoesAna.forEach(s ->
-                    System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
-            );
-        }
+        if (sugestoesAna.isEmpty()) System.out.println("   Nenhuma sugestão no momento.");
+        else sugestoesAna.forEach(s -> System.out.println("   * Sugerindo " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)"));
 
-        // TESTE 2: Sugestões para Eduardo (Simetria da rede)
-        System.out.println("\n[Sugestões] Perfil: Eduardo");
-        var sugestoesEdu = suggester.suggestConnections("Eduardo");
-        if (sugestoesEdu.isEmpty()) {
-            System.out.println("Nenhuma sugestão encontrada.");
-        } else {
-            sugestoesEdu.forEach(s ->
-                    System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
-            );
-        }
-
-        // TESTE 3: Perfil isolado sem rede de segundo grau
-        System.out.println("\n[Sugestões] Perfil: Gabriel (Grupo Isolado)");
+        System.out.println("\n-> Sugestões para Gabriel (Perfil em bolha pequena):");
         var sugestoesGab = suggester.suggestConnections("Gabriel");
-        if (sugestoesGab.isEmpty()) {
-            System.out.println("Nenhuma sugestão encontrada. O algoritmo filtrou corretamente!");
-        } else {
-            sugestoesGab.forEach(s ->
-                    System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
-            );
-        }
+        if (sugestoesGab.isEmpty()) System.out.println("   Nenhuma sugestão no momento. (Filtro funcionou!)");
+        else sugestoesGab.forEach(s -> System.out.println("   * Sugerindo " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)"));
 
-        // ====== ROTA DE MAIOR AFINIDADE (Dijkstra) ======
-        System.out.println("\n=== TESTES: Rota de Maior Afinidade (LinkedInAnalyzer) ===");
-
-        // TESTE 1: Rota direta vs rota alternativa mais cara
-        System.out.println("\n[Rota de Maior Afinidade] Ana -> Fernanda");
-        PathResult bestRouteAF = analyzer.bestAffinityRoute("Ana", "Fernanda");
-        if (bestRouteAF.hasPath()) {
-            System.out.println("Rota: " + bestRouteAF.path());
-            System.out.println("Custo total: " + bestRouteAF.totalCost());
-        }
-
-        // TESTE 2: Conexão direta (grau 1)
-        System.out.println("\n[Rota de Maior Afinidade] Ana -> Bruno");
-        PathResult bestRouteAB = analyzer.bestAffinityRoute("Ana", "Bruno");
-        if (bestRouteAB.hasPath()) {
-            System.out.println("Rota: " + bestRouteAB.path());
-            System.out.println("Custo total: " + bestRouteAB.totalCost());
-        }
-
-        // TESTE 3: Perfis em componentes isolados (sem rota possível)
-        System.out.println("\n[Rota de Maior Afinidade] Ana -> Gabriel (componentes isolados)");
-        PathResult bestRouteAG = analyzer.bestAffinityRoute("Ana", "Gabriel");
-        if (!bestRouteAG.hasPath()) {
-            System.out.println("Resultado: Sem rota possível (Perfis em redes isoladas).");
-        }
-
-        // ====== MAPEAMENTO DE COMPONENTES CONEXOS (GRUPOS ISOLADOS) ======
-        System.out.println("\n=== TESTES: Mapeamento de Grupos Isolados (LinkedInAnalyzer) ===");
-
-        List<List<String>> subNetworks = analyzer.isolatedGroups();
-        System.out.println("\nTotal de grupos (componentes conexos) encontrados: " + subNetworks.size());
-
-        for (int i = 0; i < subNetworks.size(); i++) {
-            System.out.println("Grupo " + (i + 1) + ": " + subNetworks.get(i));
-        }
+        System.out.println("\n=====================================================");
+        System.out.println("*** ANÁLISE CONCLUÍDA COM SUCESSO! ***");
+        System.out.println("=====================================================");
     }
 }
