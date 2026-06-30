@@ -6,6 +6,8 @@ import br.com.unipe.linkedingraph.algorithm.PathResult;
 import br.com.unipe.linkedingraph.graph.Graph;
 import br.com.unipe.linkedingraph.analyzer.LinkedInAnalyzer;
 
+import java.util.List;
+
 public class LinkedInApp {
     public static void main(String[] args) {
         Graph linkedinGraph = new Graph();
@@ -146,7 +148,7 @@ public class LinkedInApp {
                     System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
             );
         }
-        
+
         // ====== ROTA DE MAIOR AFINIDADE (Dijkstra) ======
         System.out.println("\n=== TESTES: Rota de Maior Afinidade (LinkedInAnalyzer) ===");
 
@@ -171,6 +173,16 @@ public class LinkedInApp {
         PathResult bestRouteAG = analyzer.bestAffinityRoute("Ana", "Gabriel");
         if (!bestRouteAG.hasPath()) {
             System.out.println("Resultado: Sem rota possível (Perfis em redes isoladas).");
+        }
+
+        // ====== MAPEAMENTO DE COMPONENTES CONEXOS (GRUPOS ISOLADOS) ======
+        System.out.println("\n=== TESTES: Mapeamento de Grupos Isolados (LinkedInAnalyzer) ===");
+
+        List<List<String>> subNetworks = analyzer.isolatedGroups();
+        System.out.println("\nTotal de grupos (componentes conexos) encontrados: " + subNetworks.size());
+
+        for (int i = 0; i < subNetworks.size(); i++) {
+            System.out.println("Grupo " + (i + 1) + ": " + subNetworks.get(i));
         }
     }
 }
