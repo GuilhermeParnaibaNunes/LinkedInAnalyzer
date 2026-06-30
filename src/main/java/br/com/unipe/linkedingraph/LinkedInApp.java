@@ -5,16 +5,16 @@ import br.com.unipe.linkedingraph.algorithm.DFS;
 import br.com.unipe.linkedingraph.algorithm.Dijkstra;
 import br.com.unipe.linkedingraph.algorithm.PathResult;
 import br.com.unipe.linkedingraph.graph.Graph;
+import br.com.unipe.linkedingraph.analyzer.LinkedInAnalyzer;
 
 public class LinkedInApp {
     public static void main(String[] args) {
-
         Graph linkedinGraph = new Graph();
 
         // ====== VÉRTICES ======
         linkedinGraph.addVertices(
                 "Ana", "Bruno", "Carlos", "Daniela", "Eduardo",
-                "Fernanda", "Gabriel", "Hugo", "Igor", "Juliana"
+                "Fernanda", "Gabriel", "Hugo", "Igor", "Juliana", "Kevin"
         );
 
         // ====== CONEXÕES PRINCIPAIS ======
@@ -27,6 +27,8 @@ public class LinkedInApp {
 
         linkedinGraph.addEdge("Daniela", "Fernanda", 5);
         linkedinGraph.addEdge("Eduardo", "Fernanda", 1);
+
+        linkedinGraph.addEdge("Fernanda", "Kevin", 4);
 
         // ====== GRUPO ISOLADO 1 ======
         linkedinGraph.addEdge("Gabriel", "Hugo", 1);
@@ -104,6 +106,74 @@ public class LinkedInApp {
             dijkstra.execute("Ana", null);
         } catch (IllegalArgumentException e) {
             System.out.println("Exceção capturada com sucesso: " + e.getMessage());
+        }
+
+        // ====== GRAU DE SEPARAÇÃO ======
+        LinkedInAnalyzer analyzer = new LinkedInAnalyzer(linkedinGraph);
+        System.out.println("\n=== TESTES: Grau de Separação (LinkedInAnalyzer) ===");
+
+        // TESTE 1: Contatos diretos (grau 1)
+        System.out.println("\n[Grau de Separação] Ana -> Bruno");
+        int grau1 = analyzer.degreeOfSeparation("Ana", "Bruno");
+        System.out.println("Resultado: " + (grau1 == -1 ? "Sem conexão (-1)" : grau1 + " salto(s)"));
+
+        // TESTE 2: Amigo de amigo (grau 2)
+        System.out.println("\n[Grau de Separação] Ana -> Eduardo");
+        int grau2 = analyzer.degreeOfSeparation("Ana", "Eduardo");
+        System.out.println("Resultado: " + (grau2 == -1 ? "Sem conexão (-1)" : grau2 + " salto(s)"));
+
+        // TESTE 3: Caminho mais longo na rede principal (grau 3)
+        System.out.println("\n[Grau de Separação] Ana -> Kevin");
+        int grau3 = analyzer.degreeOfSeparation("Ana", "Kevin");
+        System.out.println("Resultado: " + (grau3 == -1 ? "Sem conexão (-1)" : grau3 + " salto(s)"));
+
+        // TESTE 4: Perfis em componentes totalmente isolados (deve retornar -1)
+        System.out.println("\n[Grau de Separação] Ana -> Gabriel (componentes isolados)");
+        int grau4 = analyzer.degreeOfSeparation("Ana", "Gabriel");
+        System.out.println("Resultado: " + (grau4 == -1 ? "Sem conexão (-1)" : grau4 + " salto(s)"));
+
+        // TESTE 5: Mesmo perfil (grau 0)
+        System.out.println("\n[Grau de Separação] Ana -> Ana (mesmo perfil)");
+        int grau5 = analyzer.degreeOfSeparation("Ana", "Ana");
+        System.out.println("Resultado: " + (grau5 == -1 ? "Sem conexão (-1)" : grau5 + " salto(s)"));
+
+        // ====== SUGESTÕES DE CONEXÃO ======
+        br.com.unipe.linkedingraph.analyzer.ConnectionSuggestion suggester =
+                new br.com.unipe.linkedingraph.analyzer.ConnectionSuggestion(linkedinGraph);
+
+        System.out.println("\n=== TESTES: Sugestões de Conexão (ConnectionSuggestion) ===");
+
+        // TESTE 1: Sugestões para Ana (Múltiplas sugestões com pesos diferentes)
+        System.out.println("\n[Sugestões] Perfil: Ana");
+        var sugestoesAna = suggester.suggestConnections("Ana");
+        if (sugestoesAna.isEmpty()) {
+            System.out.println("Nenhuma sugestão encontrada.");
+        } else {
+            sugestoesAna.forEach(s ->
+                    System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
+            );
+        }
+
+        // TESTE 2: Sugestões para Eduardo (Simetria da rede)
+        System.out.println("\n[Sugestões] Perfil: Eduardo");
+        var sugestoesEdu = suggester.suggestConnections("Eduardo");
+        if (sugestoesEdu.isEmpty()) {
+            System.out.println("Nenhuma sugestão encontrada.");
+        } else {
+            sugestoesEdu.forEach(s ->
+                    System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
+            );
+        }
+
+        // TESTE 3: Perfil isolado sem rede de segundo grau
+        System.out.println("\n[Sugestões] Perfil: Gabriel (Grupo Isolado)");
+        var sugestoesGab = suggester.suggestConnections("Gabriel");
+        if (sugestoesGab.isEmpty()) {
+            System.out.println("Nenhuma sugestão encontrada. O algoritmo filtrou corretamente!");
+        } else {
+            sugestoesGab.forEach(s ->
+                    System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
+            );
         }
     }
 }
