@@ -2,7 +2,6 @@ package br.com.unipe.linkedingraph;
 
 import br.com.unipe.linkedingraph.algorithm.BFS;
 import br.com.unipe.linkedingraph.algorithm.DFS;
-import br.com.unipe.linkedingraph.algorithm.Dijkstra;
 import br.com.unipe.linkedingraph.algorithm.PathResult;
 import br.com.unipe.linkedingraph.graph.Graph;
 import br.com.unipe.linkedingraph.analyzer.LinkedInAnalyzer;
@@ -80,34 +79,6 @@ public class LinkedInApp {
             System.out.println("Caminho percorrido pelo BFS: " + bfsPath.path());
             System.out.println("Grau de separação (saltos): " + bfsPath.totalCost());
         }
-
-        // ====== TESTES COM DIJKSTRA ======
-        Dijkstra dijkstra = new Dijkstra(linkedinGraph);
-        System.out.println("\n=== TESTES DE ALGORITMO: " + dijkstra.getName() + " ===");
-
-        // Teste 1: O Caminho de Menor Custo vs Menos Saltos
-        System.out.println("\n[Teste 1] Buscando rota otimizada por peso: Ana -> Fernanda");
-        PathResult dijkstraPath = dijkstra.execute("Ana", "Fernanda");
-        if (dijkstraPath.hasPath()) {
-            System.out.println("Caminho escolhido pelo Dijkstra: " + dijkstraPath.path());
-            System.out.println("Custo total (soma dos pesos): " + dijkstraPath.totalCost());
-        }
-
-        // Teste 2: Caminho impossível (Ilha isolada)
-        System.out.println("\n[Teste 2] Buscando rota para ilha isolada: Ana -> Gabriel");
-        PathResult dijkstraIsolado = dijkstra.execute("Ana", "Gabriel");
-        if (!dijkstraIsolado.hasPath()) {
-            System.out.println("Resultado: Perfil inalcançável. PathResult.empty() funcionou perfeitamente.");
-        }
-
-        // Teste 3: Proteção arquitetural contra travessia cega
-        System.out.println("\n[Teste 3] Tentativa de travessia cega (Alvo nulo)");
-        try {
-            dijkstra.execute("Ana", null);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Exceção capturada com sucesso: " + e.getMessage());
-        }
-
         // ====== GRAU DE SEPARAÇÃO ======
         LinkedInAnalyzer analyzer = new LinkedInAnalyzer(linkedinGraph);
         System.out.println("\n=== TESTES: Grau de Separação (LinkedInAnalyzer) ===");
@@ -174,6 +145,32 @@ public class LinkedInApp {
             sugestoesGab.forEach(s ->
                     System.out.println(" -> " + s.profileName() + " (" + s.mutualFriends() + " amigo(s) em comum)")
             );
+        }
+        
+        // ====== ROTA DE MAIOR AFINIDADE (Dijkstra) ======
+        System.out.println("\n=== TESTES: Rota de Maior Afinidade (LinkedInAnalyzer) ===");
+
+        // TESTE 1: Rota direta vs rota alternativa mais cara
+        System.out.println("\n[Rota de Maior Afinidade] Ana -> Fernanda");
+        PathResult bestRouteAF = analyzer.bestAffinityRoute("Ana", "Fernanda");
+        if (bestRouteAF.hasPath()) {
+            System.out.println("Rota: " + bestRouteAF.path());
+            System.out.println("Custo total: " + bestRouteAF.totalCost());
+        }
+
+        // TESTE 2: Conexão direta (grau 1)
+        System.out.println("\n[Rota de Maior Afinidade] Ana -> Bruno");
+        PathResult bestRouteAB = analyzer.bestAffinityRoute("Ana", "Bruno");
+        if (bestRouteAB.hasPath()) {
+            System.out.println("Rota: " + bestRouteAB.path());
+            System.out.println("Custo total: " + bestRouteAB.totalCost());
+        }
+
+        // TESTE 3: Perfis em componentes isolados (sem rota possível)
+        System.out.println("\n[Rota de Maior Afinidade] Ana -> Gabriel (componentes isolados)");
+        PathResult bestRouteAG = analyzer.bestAffinityRoute("Ana", "Gabriel");
+        if (!bestRouteAG.hasPath()) {
+            System.out.println("Resultado: Sem rota possível (Perfis em redes isoladas).");
         }
     }
 }
