@@ -105,5 +105,32 @@ public class LinkedInApp {
         System.out.println("\n[Grau de Separação] Ana -> Ana (mesmo perfil)");
         int grau5 = analyzer.degreeOfSeparation("Ana", "Ana");
         System.out.println("Resultado: " + (grau5 == -1 ? "Sem conexão (-1)" : grau5 + " salto(s)"));
+
+
+        // ====== ROTA DE MAIOR AFINIDADE (Dijkstra) ======
+        System.out.println("\n=== TESTES: Rota de Maior Afinidade (LinkedInAnalyzer) ===");
+
+        // TESTE 1: Rota direta vs rota alternativa mais cara
+        System.out.println("\n[Rota de Maior Afinidade] Ana -> Fernanda");
+        PathResult bestRouteAF = analyzer.bestAffinityRoute("Ana", "Fernanda");
+        if (bestRouteAF.hasPath()) {
+            System.out.println("Rota: " + bestRouteAF.path());
+            System.out.println("Custo total: " + bestRouteAF.totalCost());
+        }
+
+        // TESTE 2: Conexão direta (grau 1)
+        System.out.println("\n[Rota de Maior Afinidade] Ana -> Bruno");
+        PathResult bestRouteAB = analyzer.bestAffinityRoute("Ana", "Bruno");
+        if (bestRouteAB.hasPath()) {
+            System.out.println("Rota: " + bestRouteAB.path());
+            System.out.println("Custo total: " + bestRouteAB.totalCost());
+        }
+
+        // TESTE 3: Perfis em componentes isolados (sem rota possível)
+        System.out.println("\n[Rota de Maior Afinidade] Ana -> Gabriel (componentes isolados)");
+        PathResult bestRouteAG = analyzer.bestAffinityRoute("Ana", "Gabriel");
+        if (!bestRouteAG.hasPath()) {
+            System.out.println("Resultado: Sem rota possível (Perfis em redes isoladas).");
+        }
     }
 }
