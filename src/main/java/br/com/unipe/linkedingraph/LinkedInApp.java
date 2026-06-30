@@ -4,6 +4,7 @@ import br.com.unipe.linkedingraph.algorithm.BFS;
 import br.com.unipe.linkedingraph.algorithm.DFS;
 import br.com.unipe.linkedingraph.algorithm.PathResult;
 import br.com.unipe.linkedingraph.graph.Graph;
+import br.com.unipe.linkedingraph.analyzer.LinkedInAnalyzer;
 
 public class LinkedInApp {
     public static void main(String[] args) {
@@ -76,5 +77,33 @@ public class LinkedInApp {
             System.out.println("Caminho percorrido pelo BFS: " + bfsPath.path());
             System.out.println("Grau de separação (saltos): " + bfsPath.totalCost());
         }
+        // ====== GRAU DE SEPARAÇÃO ======
+        LinkedInAnalyzer analyzer = new LinkedInAnalyzer(linkedinGraph);
+        System.out.println("\n=== TESTES: Grau de Separação (LinkedInAnalyzer) ===");
+
+        // TESTE 1: Contatos diretos (grau 1)
+        System.out.println("\n[Grau de Separação] Ana -> Bruno");
+        int grau1 = analyzer.degreeOfSeparation("Ana", "Bruno");
+        System.out.println("Resultado: " + (grau1 == -1 ? "Sem conexão (-1)" : grau1 + " salto(s)"));
+
+        // TESTE 2: Amigo de amigo (grau 2)
+        System.out.println("\n[Grau de Separação] Ana -> Eduardo");
+        int grau2 = analyzer.degreeOfSeparation("Ana", "Eduardo");
+        System.out.println("Resultado: " + (grau2 == -1 ? "Sem conexão (-1)" : grau2 + " salto(s)"));
+
+        // TESTE 3: Caminho mais longo na rede principal (grau 3)
+        System.out.println("\n[Grau de Separação] Ana -> Fernanda");
+        int grau3 = analyzer.degreeOfSeparation("Ana", "Fernanda");
+        System.out.println("Resultado: " + (grau3 == -1 ? "Sem conexão (-1)" : grau3 + " salto(s)"));
+
+        // TESTE 4: Perfis em componentes totalmente isolados (deve retornar -1)
+        System.out.println("\n[Grau de Separação] Ana -> Gabriel (componentes isolados)");
+        int grau4 = analyzer.degreeOfSeparation("Ana", "Gabriel");
+        System.out.println("Resultado: " + (grau4 == -1 ? "Sem conexão (-1)" : grau4 + " salto(s)"));
+
+        // TESTE 5: Mesmo perfil (grau 0)
+        System.out.println("\n[Grau de Separação] Ana -> Ana (mesmo perfil)");
+        int grau5 = analyzer.degreeOfSeparation("Ana", "Ana");
+        System.out.println("Resultado: " + (grau5 == -1 ? "Sem conexão (-1)" : grau5 + " salto(s)"));
     }
 }
