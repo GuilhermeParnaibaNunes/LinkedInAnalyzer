@@ -1,5 +1,6 @@
 package br.com.unipe.linkedingraph;
 
+import br.com.unipe.linkedingraph.algorithm.BFS;
 import br.com.unipe.linkedingraph.algorithm.DFS;
 import br.com.unipe.linkedingraph.algorithm.PathResult;
 import br.com.unipe.linkedingraph.graph.Graph;
@@ -36,6 +37,11 @@ public class LinkedInApp {
         System.out.println(linkedinGraph);
         linkedinGraph.displayAdjacencyMatrix();
 
+        // Teste manual antigo (preservado)
+        System.out.println("\n=== TESTES MANUAIS ANTIGOS ===");
+        System.out.println("Custo do caminho Ana -> Bruno -> Eduardo -> Fernanda: " +
+                linkedinGraph.getPathSize("Ana", "Bruno", "Eduardo", "Fernanda"));
+
         // ====== TESTES COM DFS ======
         DFS dfs = new DFS(linkedinGraph);
         System.out.println("\n=== TESTES DE ALGORITMO: " + dfs.getName() + " ===");
@@ -60,9 +66,15 @@ public class LinkedInApp {
         PathResult fullGabriel = dfs.execute("Gabriel", null);
         System.out.println("Perfis alcançáveis por Gabriel: " + fullGabriel.path());
 
-        // TESTE 4: Teste manual antigo (preservado)
-        System.out.println("\n=== TESTES MANUAIS ANTIGOS ===");
-        System.out.println("Custo do caminho Ana -> Bruno -> Eduardo -> Fernanda: " +
-                linkedinGraph.getPathSize("Ana", "Bruno", "Eduardo", "Fernanda"));
+        // ====== COMPARANDO DFS COM BFS ======
+        BFS bfs = new BFS(linkedinGraph);
+        System.out.println("\n=== TESTES DE ALGORITMO: " + bfs.getName() + " ===");
+
+        // Teste de Caminho Ana -> Fernanda
+        PathResult bfsPath = bfs.execute("Ana", "Fernanda");
+        if (bfsPath.hasPath()) {
+            System.out.println("Caminho percorrido pelo BFS: " + bfsPath.path());
+            System.out.println("Grau de separação (saltos): " + bfsPath.totalCost());
+        }
     }
 }
