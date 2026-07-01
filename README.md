@@ -11,7 +11,7 @@ Este projeto prático foi desenvolvido para a disciplina de **Teoria dos Grafos*
 ## 🎥 Apresentação do Projeto
 
 > 📺 **Clique aqui para assistir ao vídeo explicativo no YouTube**  
-> *(LINK A SER ADICIONADO.)*
+> *[(Projeto LinkedIn Analyzer: Motor de Recomendação com Grafos | Unipê)](https://youtu.be/ILRbmSqzFgk)*
 
 ---
 
